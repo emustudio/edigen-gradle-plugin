@@ -4,6 +4,8 @@
 This is a Gradle plugin which automatically generates an instruction decoder and disassembler of an emuStudio CPU
 plugin from a specification using Edigen.
 
+It is a reimplementation of [edigen-maven-plugin](https://github.com/sulir/edigen-maven-plugin) to be used with Gradle.
+
 ## License
 
 This project is released under [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.html) license.
