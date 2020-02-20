@@ -14,7 +14,7 @@ This project is released under [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0
 
 ```
 plugins {
-  id 'edigen' version 1.0.0
+  id 'net.emustudio.edigen-plugin' version 1.0.0
 }
 
 edigen {
@@ -36,9 +36,9 @@ Ths plugin provides a single task `edigen`. It can be configured with the follow
 
 - `specification` - the specification file location; _default_: `src/main/edigen/cpu.eds`
 - `decoderTemplate` - the template to use for the decoder generation
-- `decoderOutputDir` - the generated decoder output directory; _default_: `target/generated-sources/edigen/` + path
-   obtained from the decoder package name
+- `decoderOutputDir` - the generated decoder output directory; _default_: `target/generated-sources/edigen/`. This path
+   will be appended with the decoder package name
 - `disassemblerTemplate` - the template to use for the disassembler generation
-- `disassemblerOutputDir` - the generated disassembler output directory; _default_: `target/generated-sources/edigen/` +
-   path obtained from the disassembler package name
+- `disassemblerOutputDir` - the generated disassembler output directory; _default_: `target/generated-sources/edigen/`.
+   This path will be appended with the disassembler package name
 - `debug` - setting to true enables Edigen's debug mode
