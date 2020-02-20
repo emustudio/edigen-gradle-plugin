@@ -2,9 +2,12 @@
 ![Edigen Gradle Plugin Build](https://github.com/emustudio/edigen-gradle-plugin/workflows/Edigen%20Gradle%20Plugin%20Build/badge.svg)
 
 This is a Gradle plugin which automatically generates an instruction decoder and disassembler of an emuStudio CPU
-plugin from a specification using Edigen.
+plugin from a specification using [Edigen](https://github.com/sulir/edigen).
 
 It is a reimplementation of [edigen-maven-plugin](https://github.com/sulir/edigen-maven-plugin) to be used with Gradle.
+
+For more information, see [official documentation](https://www.emustudio.net/docdevel/emulator_tutorial/index/#CPU_HOWTO)
+of emuStudio plugin development. 
 
 ## License
 
