@@ -31,59 +31,15 @@ class EdigenTask extends DefaultTask {
 
     @InputFile
     @Optional
-    File specification = project.file('src/main/edigen/cpu.eds')
+    File specification = project.extensions.specification
 
-    /**
-     * Instruction decoder package + class name.
-     */
-    @Input
-    String decoderName
-
-    /**
-     * Instruction decoder template file.
-     */
-    @InputFile
-    @Optional
-    File decoderTemplate
-
-    /**
-     * Disassembler package + class name.
-     */
-    @Input
-    String disassemblerName
-
-    /**
-     * Disassembler template file.
-     */
-    @InputFile
-    @Optional
-    File disassemblerTemplate
-
-    /**
-     * Disassembler output directory.
-     *
-     * The default is "$project.buildDir/generated-sources/edigen"
-     */
     @OutputDirectory
     @Optional
-    File disassemblerOutputDir = project.file("$project.buildDir/generated-sources/edigen")
+    File disassemblerOutputDir = project.extensions.disassemblerOutputDir
 
-    /**
-     * Instruction decoder output directory.
-     *
-     * The default is "$project.buildDir/generated-sources/edigen"
-     */
     @OutputDirectory
     @Optional
-    File decoderOutputDir = project.file("$project.buildDir/generated-sources/edigen")
-
-    /**
-     * Debug mode (display tree transformations).
-     */
-    @Input
-    @Optional
-    boolean debug = false
-
+    File decoderOutputDir = project.extensions.decoderOutputDir
 
 
     @TaskAction
@@ -109,24 +65,24 @@ class EdigenTask extends DefaultTask {
     }
 
     private void validate() throws GradleException {
-        if (!decoderName.contains("."))
+        if (!project.extensions.decoderName.contains("."))
             throw new GradleException("Decoder name must include a package.");
 
-        if (!disassemblerName.contains("."))
+        if (!project.extensions.disassemblerName.contains("."))
             throw new GradleException("Disassembler name must include a package.");
     }
 
     private void addArguments(ArgumentList arguments) {
         arguments.add(specification.getPath())
-        arguments.add(decoderName)
-        arguments.add(disassemblerName)
+        arguments.add(project.extensions.decoderName)
+        arguments.add(project.extensions.disassemblerName)
 
-        arguments.addOutputDirectory("-ao", disassemblerOutputDir, disassemblerName);
-        arguments.addTemplate("-at", disassemblerTemplate);
+        arguments.addOutputDirectory("-ao", disassemblerOutputDir, project.extensions.disassemblerName);
+        arguments.addTemplate("-at", project.extensions.disassemblerTemplate);
 
-        arguments.addFlag("-d", debug);
+        arguments.addFlag("-d", project.extensions.debug);
 
-        arguments.addOutputDirectory("-do", decoderOutputDir, decoderName);
-        arguments.addTemplate("-dt", decoderTemplate);
+        arguments.addOutputDirectory("-do", decoderOutputDir, project.extensions.decoderName);
+        arguments.addTemplate("-dt", project.extensions.decoderTemplate);
     }
 }
