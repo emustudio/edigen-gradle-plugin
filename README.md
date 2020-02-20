@@ -28,7 +28,8 @@ edigen {
 
 ## Reference
 
-Ths plugin provides a single task `edigen`. It can be configured with the following parameters.
+Ths plugin provides a single task `edigen/generateSources`. It can be configured using `edigen` extension block,
+with the following parameters.
 
 ### Required parameters
 
