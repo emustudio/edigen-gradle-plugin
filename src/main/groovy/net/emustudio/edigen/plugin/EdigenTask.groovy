@@ -29,33 +29,22 @@ import org.gradle.api.tasks.Optional
 
 class EdigenTask extends DefaultTask {
 
-    @InputFile
-    @Optional
-    File specification = project.extensions.specification
-
-    @OutputDirectory
-    @Optional
-    File disassemblerOutputDir = project.extensions.disassemblerOutputDir
-
-    @OutputDirectory
-    @Optional
-    File decoderOutputDir = project.extensions.decoderOutputDir
-
-
     @TaskAction
     def generateEdigen() {
-        project.delete(disassemblerOutputDir)
-        project.delete(decoderOutputDir)
+        def edigen = project.extensions.getByType(EdigenPluginExtension)
 
-        project.mkdir(disassemblerOutputDir)
+        project.delete(edigen.disassemblerOutputDir)
+        project.delete(edigen.decoderOutputDir)
+
+        project.mkdir(edigen.disassemblerOutputDir)
         try {
-            project.mkdir(decoderOutputDir)
+            project.mkdir(edigen.decoderOutputDir)
         } catch(Exception ignored) {}
 
-        validate()
+        validate(edigen)
 
         def arguments = new ArgumentList()
-        addArguments(arguments)
+        addArguments(arguments, edigen)
 
         try {
             new Edigen().run(arguments.get());
@@ -64,25 +53,28 @@ class EdigenTask extends DefaultTask {
         }
     }
 
-    private void validate() throws GradleException {
-        if (!project.extensions.decoderName.contains("."))
+    private static void validate(EdigenPluginExtension edigen) throws GradleException {
+        Objects.requireNonNull(edigen.decoderName, "'edigen.decoderName' must be defined")
+        Objects.requireNonNull(edigen.disassemblerName, "'edigen.disassemblerName' name must be defined")
+
+        if (!edigen.decoderName.contains("."))
             throw new GradleException("Decoder name must include a package.");
 
-        if (!project.extensions.disassemblerName.contains("."))
+        if (!edigen.disassemblerName.contains("."))
             throw new GradleException("Disassembler name must include a package.");
     }
 
-    private void addArguments(ArgumentList arguments) {
-        arguments.add(specification.getPath())
-        arguments.add(project.extensions.decoderName)
-        arguments.add(project.extensions.disassemblerName)
+    private static void addArguments(ArgumentList arguments, EdigenPluginExtension edigen) {
+        arguments.add(edigen.specification.getPath())
+        arguments.add(edigen.decoderName)
+        arguments.add(edigen.disassemblerName)
 
-        arguments.addOutputDirectory("-ao", disassemblerOutputDir, project.extensions.disassemblerName);
-        arguments.addTemplate("-at", project.extensions.disassemblerTemplate);
+        arguments.addOutputDirectory("-ao", edigen.disassemblerOutputDir, edigen.disassemblerName);
+        arguments.addTemplate("-at", edigen.disassemblerTemplate);
 
-        arguments.addFlag("-d", project.extensions.debug);
+        arguments.addFlag("-d", edigen.debug);
 
-        arguments.addOutputDirectory("-do", decoderOutputDir, project.extensions.decoderName);
-        arguments.addTemplate("-dt", project.extensions.decoderTemplate);
+        arguments.addOutputDirectory("-do", edigen.decoderOutputDir, edigen.decoderName);
+        arguments.addTemplate("-dt", edigen.decoderTemplate);
     }
 }

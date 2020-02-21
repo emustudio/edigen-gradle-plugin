@@ -26,7 +26,7 @@ class EdigenPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
         project.with {
-            extensions.create('edigen', EdigenPluginExtension.class)
+            extensions.create('edigen', EdigenPluginExtension, project)
 
             apply plugin: 'java'
             tasks.create(name: 'generateSources', type: EdigenTask, {
@@ -34,10 +34,14 @@ class EdigenPlugin implements Plugin<Project> {
                 description = "Generate sources from edigen specification"
             })
 
-            tasks.compileJava.dependsOn tasks.edigen
-            sourceSets.main.java.srcDirs += [
-                    tasks.edigen.disassemblerOutputDir, tasks.edigen.decoderOutputDir
-            ]
+            tasks.compileJava.dependsOn tasks.generateSources
+
+            afterEvaluate {
+                EdigenPluginExtension ext = extensions.getByType(EdigenPluginExtension)
+                sourceSets.main.java.srcDirs += [
+                        ext.disassemblerOutputDir, ext.decoderOutputDir
+                ]
+            }
         }
     }
 }

@@ -15,6 +15,8 @@ This project is released under [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0
 
 ## Usage
 
+NOTE: The plugin is compiled against Java 11 (file version 55). Earlier Java versions are thus not supported.
+
 ```
 plugins {
   id 'net.emustudio.edigen-plugin' version 1.0.0

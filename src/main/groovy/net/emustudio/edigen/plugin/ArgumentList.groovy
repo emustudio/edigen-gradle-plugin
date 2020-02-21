@@ -55,12 +55,13 @@ class ArgumentList {
      *        code
      */
     void addOutputDirectory(String argument, File directory, String packageAndClass) {
-        def outputDirectory = directory.toPath().resolve(extractPackageDirectory(packageAndClass))
+        def packageDirectory = extractPackageDirectory(packageAndClass)
+        def outputDirectory = directory.toPath().resolve(packageDirectory).toFile()
 
         outputDirectory.mkdirs();
 
         add(argument);
-        add(outputDirectory.toString())
+        add(outputDirectory.getPath())
     }
 
     /**
