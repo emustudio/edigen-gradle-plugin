@@ -18,7 +18,7 @@
  */
 package net.emustudio.edigen.plugin
 
-import com.github.sulir.edigen.Edigen
+import net.emustudio.edigen.Edigen
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.Input
