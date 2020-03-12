@@ -3,9 +3,9 @@
 [![Maven metadata URL](https://img.shields.io/maven-metadata/v?label=Gradle%20Plugin&metadataUrl=https%3A%2F%2Fplugins.gradle.org%2Fm2%2Fnet%2Femustudio%2Fedigen-plugin%2Fnet.emustudio.edigen-plugin.gradle.plugin%2Fmaven-metadata.xml)](https://plugins.gradle.org/plugin/net.emustudio.edigen-plugin)
 
 This is a Gradle plugin which automatically generates an instruction decoder and disassembler of an emuStudio CPU
-plugin from a specification using [Edigen](https://github.com/sulir/edigen).
+plugin from a specification using [Edigen](https://github.com/emustudio/edigen).
 
-It is a reimplementation of [edigen-maven-plugin](https://github.com/sulir/edigen-maven-plugin) to be used with Gradle.
+It is a reimplementation of [edigen-maven-plugin](https://github.com/emustudio/edigen-maven-plugin) to be used with Gradle.
 
 For more information, see [official documentation](https://www.emustudio.net/docdevel/emulator_tutorial/index/#CPU_HOWTO)
 of emuStudio plugin development. 
@@ -20,7 +20,7 @@ NOTE: The plugin is compiled against Java 11 (file version 55). Earlier Java ver
 
 ```
 plugins {
-  id 'net.emustudio.edigen-plugin' version 1.0.0
+  id 'net.emustudio.edigen-plugin' version 1.1.0
 }
 
 edigen {
