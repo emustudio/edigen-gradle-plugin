@@ -8,9 +8,7 @@ plugins {
 repositories {
     mavenCentral()
     jcenter()
-    maven {
-        url "https://plugins.gradle.org/m2/"
-    }
+    gradlePluginPortal()
 }
 
 version = "1.2.0"
@@ -34,5 +32,5 @@ gradlePlugin {
 pluginBundle {
     website = 'https://github.com/emustudio/edigen-gradle-plugin'
     vcsUrl = 'https://github.com/emustudio/edigen-gradle-plugin'
-    tags = ['edigen', 'emustudio']
+    tags = ['edigen', 'emustudio','gradle']
 }

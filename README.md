@@ -20,7 +20,7 @@ NOTE: The plugin is compiled against Java 11 (file version 55). Earlier Java ver
 
 ```
 plugins {
-  id 'net.emustudio.edigen-plugin' version 1.1.0
+  id 'net.emustudio.edigen-plugin' version 1.2.0
 }
 
 edigen {
