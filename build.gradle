@@ -31,5 +31,5 @@ gradlePlugin {
 pluginBundle {
     website = 'https://github.com/emustudio/edigen-gradle-plugin'
     vcsUrl = 'https://github.com/emustudio/edigen-gradle-plugin'
-    tags = ['edigen', 'emustudio','gradle']
+    tags = ['edigen', 'emustudio']
 }
