@@ -1,21 +1,20 @@
 plugins {
     id 'java-gradle-plugin'
     id 'groovy'
-    id 'com.gradle.plugin-publish' version '0.10.1'
+    id 'com.gradle.plugin-publish' version '0.18.0'
     id 'maven-publish'
 }
 
 repositories {
     mavenCentral()
-    jcenter()
     gradlePluginPortal()
 }
 
-version = "1.2.0"
+version = "1.4.0"
 group = "net.emustudio.edigen-plugin"
 
 dependencies {
-    implementation 'net.emustudio:edigen:1.3'
+    implementation 'net.emustudio:edigen:1.4'
 }
 
 gradlePlugin {
@@ -32,5 +31,5 @@ gradlePlugin {
 pluginBundle {
     website = 'https://github.com/emustudio/edigen-gradle-plugin'
     vcsUrl = 'https://github.com/emustudio/edigen-gradle-plugin'
-    tags = ['edigen', 'emustudio','gradle']
+    tags = ['edigen', 'emustudio']
 }
