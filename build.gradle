@@ -10,11 +10,11 @@ repositories {
     gradlePluginPortal()
 }
 
-version = "1.5.0"
+version = "1.5.1"
 group = "net.emustudio.edigen-plugin"
 
 dependencies {
-    implementation 'net.emustudio:edigen:1.5.0'
+    implementation 'net.emustudio:edigen:1.5.1'
 }
 
 gradlePlugin {
