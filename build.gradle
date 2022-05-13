@@ -19,13 +19,12 @@
 plugins {
     id 'java-gradle-plugin'
     id 'groovy'
-    id 'com.gradle.plugin-publish' version '0.18.0'
+    id 'com.gradle.plugin-publish' version '1.0.0-rc-1'
     id 'maven-publish'
 }
 
 repositories {
     mavenCentral()
-    gradlePluginPortal()
 }
 
 version = "1.5.1"
