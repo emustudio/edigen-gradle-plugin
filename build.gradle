@@ -24,14 +24,18 @@ plugins {
 }
 
 repositories {
-    mavenCentral()
+  mavenLocal()
+  mavenCentral()
+  maven {
+    url 'https://oss.sonatype.org/content/repositories/snapshots'
+  }
 }
 
 version = "1.5.3-SNAPSHOT"
 group = "net.emustudio.edigen-plugin"
 
 dependencies {
-    implementation 'net.emustudio:edigen:1.5.2'
+    implementation 'net.emustudio:edigen:1.5.3-SNAPSHOT'
 }
 
 gradlePlugin {
