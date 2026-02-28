@@ -1,26 +1,15 @@
-/*
- * This file is part of edigen-gradle-plugin.
- *
- * Copyright (C) 2020-2023  Peter Jakubčo
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+/* SPDX-FileCopyrightText: 2020-2026 Peter Jakubčo
+   SPDX-License-Identifier: GPL-3.0-or-later */
+
+import com.vanniktech.maven.publish.GradlePlugin
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.SourcesJar
+import com.vanniktech.maven.publish.DeploymentValidation
+
 plugins {
     id 'java-gradle-plugin'
     id 'groovy'
-    id 'com.gradle.plugin-publish' version '1.1.0'
-    id 'maven-publish'
+    id "com.vanniktech.maven.publish" version "0.36.0"
 }
 
 repositories {
@@ -32,7 +21,7 @@ repositories {
 }
 
 version = "1.5.3-SNAPSHOT"
-group = "net.emustudio.edigen-plugin"
+group = "net.emustudio"
 
 dependencies {
     implementation 'net.emustudio:edigen:1.5.3-SNAPSHOT'
@@ -49,8 +38,47 @@ gradlePlugin {
     }
 }
 
-pluginBundle {
-    website = 'https://github.com/emustudio/edigen-gradle-plugin'
-    vcsUrl = 'https://github.com/emustudio/edigen-gradle-plugin'
-    tags = ['edigen', 'emustudio']
+mavenPublishing {
+  coordinates("net.emustudio", "edigen-gradle-plugin", version)
+  configure(new GradlePlugin(
+          new JavadocJar.Javadoc(),
+          new SourcesJar.Sources()
+  ))
+
+  signAllPublications()
+  publishToMavenCentral(true, DeploymentValidation.PUBLISHED)
+
+  pom {
+    name = 'Edigen Gradle Plugin'
+    description = 'Generates instruction decoder/disassembler of an emuStudio CPU plugin using Edigen.'
+    url = 'https://github.com/emustudio/edigen-gradle-plugin'
+    licenses {
+      license {
+        name = 'GNU General Public License, Version 3.0'
+        url = 'https://www.gnu.org/licenses/gpl-3.0.txt'
+      }
+    }
+    developers {
+      developer {
+        id = 'vbmacher'
+        name = 'Peter Jakubčo'
+        email = 'pjakubco@gmail.com'
+      }
+    }
+    scm {
+      connection = 'scm:git:git@github.com:emustudio/edigen-gradle-plugin.git'
+      developerConnection = 'scm:git:git@github.com:emustudio/edigen-gradle-plugin.git'
+      url = 'https://github.com/emustudio/edigen-gradle-plugin'
+    }
+  }
+}
+
+signing {
+  required {
+    project.gradle.taskGraph.hasTask("publish")
+  }
+
+  def signingKey = findProperty("GPG_KEY") ?: System.getenv("GPG_KEY")
+  def signingPassword = findProperty("GPG_PASSWORD") ?: System.getenv("GPG_PASSWORD")
+  useInMemoryPgpKeys(signingKey, signingPassword)
 }
