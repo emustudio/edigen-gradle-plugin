@@ -22,7 +22,7 @@ dependencies {
 gradlePlugin {
     plugins {
         edigenPlugin {
-            id = 'net.emustudio.edigen-plugin'
+            id = 'net.emustudio.edigen-gradle-plugin'
             implementationClass = 'net.emustudio.edigen.plugin.EdigenPlugin'
             displayName = 'Edigen Gradle Plugin'
             description = 'Generates instruction decoder/disassembler of an emuStudio CPU plugin using Edigen.'
