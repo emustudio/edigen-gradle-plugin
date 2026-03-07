@@ -6,14 +6,18 @@ package net.emustudio.edigen.plugin
  * A command-line argument list for edigen.
  */
 class ArgumentList {
-    private List<String> arguments = new ArrayList<String>();
+    private final List<String> arguments = []
 
     void add(String argument) {
         arguments.add(argument);
     }
 
+    void addAll(String... args) {
+        arguments.addAll(args as List<String>)
+    }
+
     String[] get() {
-        return arguments.toArray(new String[0]);
+        return arguments.toArray(new String[0])
     }
 
     /**
@@ -24,8 +28,7 @@ class ArgumentList {
      */
     void addTemplate(String argument, File template) {
         if (template != null) {
-            add(argument);
-            add(template.getPath());
+            addAll(argument, template.path)
         }
     }
 
@@ -42,10 +45,9 @@ class ArgumentList {
         def packageDirectory = extractPackageDirectory(packageAndClass)
         def outputDirectory = directory.toPath().resolve(packageDirectory).toFile()
 
-        outputDirectory.mkdirs();
+        outputDirectory.mkdirs()
 
-        add(argument);
-        add(outputDirectory.getPath())
+        addAll(argument, outputDirectory.path)
     }
 
     /**
@@ -54,8 +56,9 @@ class ArgumentList {
      * @param flag the flag value
      */
     void addFlag(String argument, boolean flag) {
-        if (flag)
-            add(argument);
+        if (flag) {
+            add(argument)
+        }
     }
 
     /**
@@ -65,7 +68,6 @@ class ArgumentList {
      */
     private static String extractPackageDirectory(String packageAndClass) {
         int dotIndex = packageAndClass.lastIndexOf('.')
-        return packageAndClass.substring(0, dotIndex).replace('.', File.separator)
+        return packageAndClass.substring(0, dotIndex).replace('.', File.separatorChar)
     }
 }
-
