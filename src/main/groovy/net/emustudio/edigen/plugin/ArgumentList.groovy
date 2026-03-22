@@ -68,6 +68,6 @@ class ArgumentList {
      */
     private static String extractPackageDirectory(String packageAndClass) {
         int dotIndex = packageAndClass.lastIndexOf('.')
-        return packageAndClass.substring(0, dotIndex).replace('.', File.separatorChar)
+        return packageAndClass.substring(0, dotIndex).replace('.', File.separator)
     }
 }
