@@ -46,3 +46,47 @@ with the following parameters.
 - `disassemblerOutputDir` - the generated disassembler output directory; _default_: `target/generated-sources/edigen/`.
    This path will be appended with the disassembler package name
 - `debug` - setting to true enables Edigen's debug mode
+
+## Publishing to Maven Central
+
+The plugin is published to [Maven Central](https://central.sonatype.com/) using the
+[com.vanniktech.maven.publish](https://vanniktech.github.io/gradle-maven-publish-plugin/) plugin, configured in
+`build.gradle`. Both the artifact coordinates (`net.emustudio:edigen-gradle-plugin`) and the signing setup are defined
+there.
+
+### Prerequisites
+
+- A [Sonatype Central Portal](https://central.sonatype.com/) account with publishing rights for the `net.emustudio`
+  namespace.
+- A GPG signing key (all published artifacts are signed via `signAllPublications()`).
+
+### Required credentials
+
+The build reads the following credentials from Gradle properties (e.g. `~/.gradle/gradle.properties`) or environment
+variables:
+
+- `GPG_KEY` - the ASCII-armored GPG private key used for signing.
+- `GPG_PASSWORD` - the passphrase for the GPG key.
+- Maven Central (Central Portal) user token, provided to the `com.vanniktech.maven.publish` plugin as
+  `mavenCentralUsername` / `mavenCentralPassword` (or the matching `ORG_GRADLE_PROJECT_*` environment variables).
+
+Never commit these values to the repository.
+
+### Releasing
+
+1. Set the release version in `build.gradle` (remove the `-SNAPSHOT` suffix for a final release; keep it for snapshots).
+2. Run:
+
+   ```
+   ./gradlew publish
+   ```
+
+   Snapshot versions are published to the Central Portal snapshots repository. Release versions are uploaded and, thanks
+   to `publishToMavenCentral(true, DeploymentValidation.PUBLISHED)`, automatically released once validation succeeds.
+3. After a release, bump the version back to the next `-SNAPSHOT` version.
+
+### Automated deployment
+
+Pushing to the `master` branch triggers the `.github/workflows/deploy.yml` workflow, which runs `./gradlew publish`.
+The required secrets (`GPG_KEY`, `GPG_PASSWORD`, `SONATYPE_USERNAME`, `SONATYPE_PASSWORD`) are configured as GitHub
+Actions repository secrets, so a normal release only requires merging to `master`.
