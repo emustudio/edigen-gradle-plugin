@@ -67,10 +67,11 @@ abstract class EdigenGenerationTask extends DefaultTask {
         arguments.addOutputDirectory('-ao', new File(staging, 'disassembler'), disassembler)
         arguments.addTemplate('-dt', decoderTemplate.orNull?.asFile)
         arguments.addTemplate('-at', disassemblerTemplate.orNull?.asFile)
-        arguments.addFlag('-d', debug.get())
+        boolean debugRequested = debug.get()
+        arguments.addFlag('-d', debugRequested)
 
         try {
-            new Edigen().run(arguments.get())
+            new Edigen(new GradleGenerationLog(logger, debugRequested)).run(arguments.get())
         } catch (Exception ex) {
             throw new GradleException(ex.message, ex)
         }

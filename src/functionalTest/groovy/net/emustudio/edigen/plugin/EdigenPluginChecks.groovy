@@ -12,6 +12,10 @@ class EdigenPluginChecks {
 
     static void main(String[] args) {
         List<String> checks = [
+                'logAdapterRoutesAndFiltersPerInvocation',
+                'normalOutputReportsInputAndWrittenFiles',
+                'explicitDebugShowsAstWithoutGradleDebug',
+                'failedGenerationDoesNotReportSuccess',
                 'unchangedInputsAreUpToDateAndSpecificationEditsRegenerate',
                 'bothTemplateEditsInvalidateGeneration',
                 'renameRemovesOnlyPreviouslyOwnedSource',
@@ -91,6 +95,79 @@ edigen {
 
     private File generated(String className) {
         return new File(outputDir, "sample/${className}.java")
+    }
+
+    void logAdapterRoutesAndFiltersPerInvocation() {
+        new File(projectDir, 'build.gradle') << '''
+tasks.register('checkGenerationLog') {
+    doLast {
+        List<String> messages = []
+        boolean hostDebug = false
+        boolean hostLifecycle = true
+        def host = java.lang.reflect.Proxy.newProxyInstance(
+                getClass().classLoader, [org.gradle.api.logging.Logger] as Class[],
+                { proxy, method, arguments ->
+                    if (method.name == 'isDebugEnabled') {
+                        return hostDebug
+                    }
+                    if (method.name == 'isLifecycleEnabled') {
+                        return hostLifecycle
+                    }
+                    if (method.name in ['lifecycle', 'warn', 'debug']) {
+                        messages.add("${method.name}: ${arguments[0]}".toString())
+                    }
+                    return method.returnType == Boolean.TYPE ? false : null
+                } as java.lang.reflect.InvocationHandler) as org.gradle.api.logging.Logger
+        def normal = new net.emustudio.edigen.plugin.GradleGenerationLog(host, false)
+        normal.info('generated')
+        normal.warn('missing format')
+        normal.debug({ throw new AssertionError('Disabled debug must not render') } as java.util.function.Supplier<String>)
+        assert ['lifecycle: generated', 'warn: missing format'] == messages
+
+        def explicit = new net.emustudio.edigen.plugin.GradleGenerationLog(host, true)
+        explicit.debug({ 'requested tree' } as java.util.function.Supplier<String>)
+        normal.debug({ throw new AssertionError('Explicit debug leaked to another invocation') } as java.util.function.Supplier<String>)
+        assert 'lifecycle: requested tree' == messages.last()
+        hostLifecycle = false
+        int messageCount = messages.size()
+        explicit.debug({ throw new AssertionError('Quiet lifecycle output must not render') } as java.util.function.Supplier<String>)
+        assert messageCount == messages.size()
+        hostLifecycle = true
+        explicit.debug({ 'visible again' } as java.util.function.Supplier<String>)
+        assert 'lifecycle: visible again' == messages.last()
+        hostDebug = true
+        normal.debug({ 'host debug' } as java.util.function.Supplier<String>)
+        assert 'debug: host debug' == messages.last()
+    }
+}
+'''
+        assertEquals(TaskOutcome.SUCCESS, runner('checkGenerationLog').build().task(':checkGenerationLog').outcome)
+    }
+
+    void normalOutputReportsInputAndWrittenFiles() {
+        def result = runner('generateSources').build()
+        assertTrue(result.output.contains("Generating decoder and disassembler from ${specification.absolutePath}"))
+        assertTrue(result.output.contains('Wrote decoder sample.DecoderImpl to '))
+        assertTrue(result.output.contains('Wrote disassembler sample.DisassemblerImpl to '))
+        assertTrue(result.output.contains('Generation completed in '))
+        assertFalse(result.output.contains('AST after '))
+    }
+
+    void explicitDebugShowsAstWithoutGradleDebug() {
+        new File(projectDir, 'build.gradle') << '\nedigen { debug = true }\n'
+        def result = runner('generateSources').build()
+        assertTrue(result.output.contains('AST after ResolveNamesVisitor:'))
+        assertTrue(result.output.contains('Generation completed in '))
+    }
+
+    void failedGenerationDoesNotReportSuccess() {
+        specification.text = 'invalid specification'
+        def result = runner('generateSources').withArguments('generateSources', '--offline').buildAndFail()
+        assertFalse(result.output.contains('Generation completed in '))
+        assertFalse(result.output.contains('Wrote decoder '))
+        assertFalse(result.output.contains('Wrote disassembler '))
+        assertTrue(result.output.contains(specification.absolutePath))
+        assertEquals(1, result.output.count('Cannot parse specification'))
     }
 
     void unchangedInputsAreUpToDateAndSpecificationEditsRegenerate() {
