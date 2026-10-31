@@ -2,3 +2,7 @@
    SPDX-License-Identifier: GPL-3.0-or-later */
 rootProject.name = 'edigen-gradle-plugin'
 
+// Use current generator sources for local cross-repository verification.
+if (providers.gradleProperty('edigenPath').isPresent()) {
+    includeBuild(providers.gradleProperty('edigenPath').get())
+}

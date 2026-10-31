@@ -17,7 +17,7 @@ NOTE: The plugin is compiled against Java 11 (file version 55). Earlier Java ver
 
 ```
 plugins {
-  id 'net.emustudio.edigen-plugin' version 1.5.2
+  id 'net.emustudio.edigen-gradle-plugin' version '1.6.0-SNAPSHOT'
 }
 
 edigen {
@@ -28,7 +28,7 @@ edigen {
 
 ## Reference
 
-Ths plugin provides a single task `edigen/generateSources`. It can be configured using `edigen` extension block,
+The plugin provides a single task `generateSources` in the `edigen` group. It can be configured using the `edigen` extension block,
 with the following parameters.
 
 ### Required parameters
@@ -40,12 +40,40 @@ with the following parameters.
 
 - `specification` - the specification file location; _default_: `src/main/edigen/cpu.eds`
 - `decoderTemplate` - the template to use for the decoder generation
-- `decoderOutputDir` - the generated decoder output directory; _default_: `target/generated-sources/edigen/`. This path
+- `decoderOutputDir` - the generated decoder output directory; _default_: `build/generated-sources/edigen/`. This path
    will be appended with the decoder package name
 - `disassemblerTemplate` - the template to use for the disassembler generation
-- `disassemblerOutputDir` - the generated disassembler output directory; _default_: `target/generated-sources/edigen/`.
+- `disassemblerOutputDir` - the generated disassembler output directory; _default_: `build/generated-sources/edigen/`.
    This path will be appended with the disassembler package name
 - `debug` - setting to true enables Edigen's debug mode
+
+The extension uses Gradle properties (`RegularFileProperty`, `DirectoryProperty`, and `Property`), so values
+can also be supplied through providers. Both output directories are registered as Java source directories
+with a producer dependency on `generateSources`. Unchanged specifications, templates, class names, and
+debug settings leave the task up-to-date. Task execution supports Gradle's configuration cache.
+
+### Generated-source ownership
+
+Use dedicated generated-source directories, separate from handwritten sources. A private preparation task stages
+both generated files before `generateSources` can publish them. Invalid input fails that dependency before Gradle
+can clean published outputs, including when local task history is missing.
+Each output directory contains `.edigen-<owner>-owned-sources`, listing only sources written by this task.
+The owner identifies the root-project directory and task path, so tasks or subprojects sharing an output directory
+keep separate ownership records. On a class rename, the task removes obsolete files from that list;
+unrelated files are preserved. A destination Java file
+without an ownership entry causes failure instead of being overwritten.
+
+When upgrading from a plugin version without ownership tracking, clean the old generated output once
+(`clean` suffices for the default directories). Keep the ownership file alongside outputs in custom directories.
+
+### Local generator verification
+
+The built-in Groovy assertion runner exercises Gradle TestKit without an external test framework.
+Both `test` and `check` run these functional checks. To verify against a sibling Edigen checkout:
+
+```bash
+./gradlew -PedigenPath=../edigen test
+```
 
 ## Publishing to Maven Central
 

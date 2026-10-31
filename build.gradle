@@ -92,3 +92,27 @@ repositories {
   }
   mavenCentral()
 }
+
+// Built-in Gradle/Groovy tooling keeps functional checks independent of a test framework.
+sourceSets {
+    functionalTest
+}
+
+configurations.functionalTestImplementation.extendsFrom(configurations.implementation)
+
+dependencies {
+    functionalTestImplementation gradleTestKit()
+    functionalTestImplementation localGroovy()
+}
+
+def functionalChecks = tasks.register('functionalTest', JavaExec) {
+    group = 'verification'
+    description = 'Checks generation lifecycle and output ownership with Gradle TestKit.'
+    dependsOn tasks.named('functionalTestClasses'), tasks.named('pluginUnderTestMetadata')
+    classpath = sourceSets.functionalTest.runtimeClasspath + files(tasks.named('pluginUnderTestMetadata'))
+    mainClass = 'net.emustudio.edigen.plugin.EdigenPluginChecks'
+}
+
+tasks.named('test') {
+    dependsOn functionalChecks
+}
