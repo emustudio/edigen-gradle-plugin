@@ -38,53 +38,30 @@ abstract class EdigenTask extends DefaultTask {
     @Input
     abstract Property<String> getDecoderName()
 
-    @Input
-    abstract Property<String> getDisassemblerName()
-
     @Internal
     abstract DirectoryProperty getDecoderOutputDir()
-
-    @Internal
-    abstract DirectoryProperty getDisassemblerOutputDir()
 
     @OutputFiles
     List<File> getGeneratedFiles() {
         String decoder = decoderName.get()
-        String disassembler = disassemblerName.get()
         File decoderRoot = decoderOutputDir.get().asFile
-        File disassemblerRoot = disassemblerOutputDir.get().asFile
-        validateDistinctTargets(decoderRoot.toPath().resolve(sourcePath(decoder)),
-                disassemblerRoot.toPath().resolve(sourcePath(disassembler)))
         // Check before Gradle's stale-output cleanup can claim an existing source.
         validateOwnership(decoderRoot.toPath(), sourcePath(decoder), ownedSources(decoderRoot.toPath(), ownershipFile))
-        validateOwnership(disassemblerRoot.toPath(), sourcePath(disassembler), ownedSources(disassemblerRoot.toPath(), ownershipFile))
         return [
                 new File(decoderRoot, sourcePath(decoder).toString()),
-                new File(disassemblerRoot, sourcePath(disassembler).toString()),
-                new File(decoderRoot, ownershipFile),
-                new File(disassemblerRoot, ownershipFile)
-        ].unique()
+                new File(decoderRoot, ownershipFile)
+        ]
     }
 
     @TaskAction
     void publishEdigen() {
         Path decoderRoot = decoderOutputDir.get().asFile.toPath().toAbsolutePath().normalize()
-        Path disassemblerRoot = disassemblerOutputDir.get().asFile.toPath().toAbsolutePath().normalize()
         Path decoderFile = sourcePath(decoderName.get())
-        Path disassemblerFile = sourcePath(disassemblerName.get())
-        validateDistinctTargets(decoderRoot.resolve(decoderFile), disassemblerRoot.resolve(disassemblerFile))
 
         Path staging = stagedSources.get().asFile.toPath()
         Map<Path, Map<Path, Path>> outputs = [:]
         outputs.computeIfAbsent(decoderRoot) { [:] }[decoderFile] = staging.resolve('decoder').resolve(decoderFile)
-        outputs.computeIfAbsent(disassemblerRoot) { [:] }[disassemblerFile] = staging.resolve('disassembler').resolve(disassemblerFile)
         publishSources(outputs, ownershipFile)
-    }
-
-    private static void validateDistinctTargets(Path decoderTarget, Path disassemblerTarget) {
-        if (decoderTarget.toFile().canonicalFile == disassemblerTarget.toFile().canonicalFile) {
-            throw new GradleException('Decoder and disassembler must have distinct output files.')
-        }
     }
 
     private static Set<Path> ownedSources(Path root, String ownershipFile) {

@@ -17,8 +17,9 @@ class EdigenPluginChecks {
                 'explicitDebugShowsAstWithoutGradleDebug',
                 'failedGenerationDoesNotReportSuccess',
                 'unchangedInputsAreUpToDateAndSpecificationEditsRegenerate',
-                'bothTemplateEditsInvalidateGeneration',
+                'decoderTemplateEditsInvalidateGeneration',
                 'renameRemovesOnlyPreviouslyOwnedSource',
+                'obsoleteOwnedRendererIsRemoved',
                 'invalidSpecificationPreservesPublishedSourcesAndUnrelatedFiles',
                 'unownedCustomTargetSourceIsNeverOverwritten',
                 'unownedBuildTargetSourceIsNeverDeletedByGradleCleanup',
@@ -27,9 +28,9 @@ class EdigenPluginChecks {
                 'generationSupportsConfigurationCache',
                 'twoProjectsSharingOutputDirectoryPreserveEachOthersSources',
                 'secondProjectCannotClaimFirstProjectsSource',
-                'decoderOutputOverrideKeepsIndependentDisassemblerDefault',
+                'decoderOutputOverrideChangesGeneratedLocation',
                 'invalidSpecificationWithColdHistoryPreservesPublishedSources',
-                'collidingTargetsWithColdHistoryPreservePublishedSources'
+                'removedDisassemblerConfigurationFailsClearly'
         ]
         for (String check : checks) {
             def fixture = new EdigenPluginChecks()
@@ -73,7 +74,6 @@ class EdigenPluginChecks {
 plugins { id 'net.emustudio.edigen-gradle-plugin' }
 edigen {
     decoderName = 'sample.DecoderImpl'
-    disassemblerName = 'sample.DisassemblerImpl'
 }
 '''
         specification = new File(projectDir, 'src/main/edigen/cpu.eds')
@@ -146,9 +146,9 @@ tasks.register('checkGenerationLog') {
 
     void normalOutputReportsInputAndWrittenFiles() {
         def result = runner('generateSources').build()
-        assertTrue(result.output.contains("Generating decoder and disassembler from ${specification.absolutePath}"))
+        assertTrue(result.output.contains("Generating decoder from ${specification.absolutePath}"))
         assertTrue(result.output.contains('Wrote decoder sample.DecoderImpl to '))
-        assertTrue(result.output.contains('Wrote disassembler sample.DisassemblerImpl to '))
+        assertFalse(generated('DisassemblerImpl').exists())
         assertTrue(result.output.contains('Generation completed in '))
         assertFalse(result.output.contains('AST after '))
     }
@@ -165,7 +165,6 @@ tasks.register('checkGenerationLog') {
         def result = runner('generateSources').withArguments('generateSources', '--offline').buildAndFail()
         assertFalse(result.output.contains('Generation completed in '))
         assertFalse(result.output.contains('Wrote decoder '))
-        assertFalse(result.output.contains('Wrote disassembler '))
         assertTrue(result.output.contains(specification.absolutePath))
         assertEquals(1, result.output.count('Cannot parse specification'))
     }
@@ -179,24 +178,18 @@ tasks.register('checkGenerationLog') {
         assertNotEquals(previous, generated('DecoderImpl').text)
     }
 
-    void bothTemplateEditsInvalidateGeneration() {
+    void decoderTemplateEditsInvalidateGeneration() {
         File decoderTemplate = new File(projectDir, 'Decoder.edt')
-        File disassemblerTemplate = new File(projectDir, 'Disassembler.edt')
         decoderTemplate.text = Edigen.getResource('/Decoder.edt').text
-        disassemblerTemplate.text = Edigen.getResource('/Disassembler.edt').text
         new File(projectDir, 'build.gradle') << '''
 edigen {
     decoderTemplate = file('Decoder.edt')
-    disassemblerTemplate = file('Disassembler.edt')
 }
 '''
         runner('generateSources').build()
         decoderTemplate << '\n// decoder template changed\n'
         assertEquals(TaskOutcome.SUCCESS, runner('generateSources').build().task(':generateSources').outcome)
         assertTrue(generated('DecoderImpl').text.contains('// decoder template changed'))
-        disassemblerTemplate << '\n// disassembler template changed\n'
-        assertEquals(TaskOutcome.SUCCESS, runner('generateSources').build().task(':generateSources').outcome)
-        assertTrue(generated('DisassemblerImpl').text.contains('// disassembler template changed'))
     }
 
     void renameRemovesOnlyPreviouslyOwnedSource() {
@@ -211,10 +204,26 @@ edigen {
         assertEquals('package sample; class HandWritten {}\n', unrelated.text)
     }
 
+    void obsoleteOwnedRendererIsRemoved() {
+        runner('generateSources').build()
+        File renderer = generated('DisassemblerImpl')
+        renderer.text = 'package sample; class DisassemblerImpl {}\n'
+        File manifest = outputDir.listFiles().find { it.name.endsWith('-owned-sources') }
+        manifest << 'sample/DisassemblerImpl.java\n'
+        File unrelated = generated('HandWritten')
+        unrelated.text = 'package sample; class HandWritten {}\n'
+
+        runner('generateSources', '--rerun-tasks').build()
+
+        assertFalse(renderer.exists())
+        assertTrue(generated('DecoderImpl').isFile())
+        assertEquals('package sample; class HandWritten {}\n', unrelated.text)
+        assertFalse(manifest.text.contains('DisassemblerImpl'))
+    }
+
     void invalidSpecificationPreservesPublishedSourcesAndUnrelatedFiles() {
         runner('generateSources').build()
         String decoder = generated('DecoderImpl').text
-        String disassembler = generated('DisassemblerImpl').text
         File manifest = outputDir.listFiles().find { it.name.endsWith('-owned-sources') }
         String ownership = manifest.text
         File unrelated = new File(outputDir, 'keep.txt')
@@ -222,21 +231,19 @@ edigen {
         specification.text = 'this is not an instruction set'
         runner('generateSources').buildAndFail()
         assertEquals(decoder, generated('DecoderImpl').text)
-        assertEquals(disassembler, generated('DisassemblerImpl').text)
         assertEquals(ownership, manifest.text)
         assertEquals('keep me', unrelated.text)
     }
 
     void unownedCustomTargetSourceIsNeverOverwritten() {
         outputDir = new File(projectDir, 'generated')
-        new File(projectDir, 'build.gradle') << "\nedigen { decoderOutputDir = file('generated'); disassemblerOutputDir = file('generated') }\n"
+        new File(projectDir, 'build.gradle') << "\nedigen { decoderOutputDir = file('generated') }\n"
         File existing = generated('DecoderImpl')
         existing.parentFile.mkdirs()
         existing.text = 'hand written source'
         def result = runner('generateSources').buildAndFail()
         assertTrue(result.output.contains('Refusing to overwrite source not owned by Edigen'))
         assertEquals('hand written source', existing.text)
-        assertFalse(generated('DisassemblerImpl').exists())
     }
 
     void unownedBuildTargetSourceIsNeverDeletedByGradleCleanup() {
@@ -276,9 +283,7 @@ plugins { id 'net.emustudio.edigen-gradle-plugin' }
 edigen {
     specification = file('../src/main/edigen/cpu.eds')
     decoderName = '${decoderName}'
-    disassemblerName = 'second.DisassemblerImpl'
     decoderOutputDir = file('../build/generated-sources/edigen')
-    disassemblerOutputDir = file('../build/generated-sources/edigen')
 }
 """
     }
@@ -307,46 +312,34 @@ edigen {
         assertEquals(firstSource, generated('DecoderImpl').text)
     }
 
-    void decoderOutputOverrideKeepsIndependentDisassemblerDefault() {
+    void decoderOutputOverrideChangesGeneratedLocation() {
         new File(projectDir, 'build.gradle') << "\nedigen { decoderOutputDir = file('build/decoder') }\n"
         runner('generateSources').build()
         assertTrue(new File(projectDir, 'build/decoder/sample/DecoderImpl.java').isFile())
-        assertTrue(generated('DisassemblerImpl').isFile())
         assertFalse(generated('DecoderImpl').exists())
     }
 
     void invalidSpecificationWithColdHistoryPreservesPublishedSources() {
         runner('generateSources').build()
         String decoder = generated('DecoderImpl').text
-        String disassembler = generated('DisassemblerImpl').text
         File manifest = outputDir.listFiles().find { it.name.endsWith('-owned-sources') }
         String ownership = manifest.text
         assertTrue(new File(projectDir, '.gradle').deleteDir())
         specification.text = 'invalid specification'
         runner('generateSources').buildAndFail()
         assertEquals(decoder, generated('DecoderImpl').text)
-        assertEquals(disassembler, generated('DisassemblerImpl').text)
         assertEquals(ownership, manifest.text)
     }
 
-    void collidingTargetsWithColdHistoryPreservePublishedSources() {
-        runner('generateSources').build()
-        String decoder = generated('DecoderImpl').text
-        String disassembler = generated('DisassemblerImpl').text
-        File manifest = outputDir.listFiles().find { it.name.endsWith('-owned-sources') }
-        String ownership = manifest.text
-        assertTrue(new File(projectDir, '.gradle').deleteDir())
+    void removedDisassemblerConfigurationFailsClearly() {
         new File(projectDir, 'build.gradle') << '''
 edigen {
-    disassemblerName = 'sample.DecoderImpl'
-    disassemblerOutputDir = file('build/generated-sources/edigen/../edigen')
+    disassemblerName = 'sample.DisassemblerImpl'
 }
 '''
         def result = runner('generateSources').buildAndFail()
-        assertTrue(result.output.contains('Decoder and disassembler must have distinct output files.'))
-        assertEquals(decoder, generated('DecoderImpl').text)
-        assertEquals(disassembler, generated('DisassemblerImpl').text)
-        assertEquals(ownership, manifest.text)
+        assertTrue(result.output.contains('disassemblerName'))
+        assertFalse(generated('DecoderImpl').exists())
     }
 
     void generationSupportsConfigurationCache() {

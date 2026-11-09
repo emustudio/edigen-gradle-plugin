@@ -30,7 +30,7 @@ gradlePlugin {
             id = 'net.emustudio.edigen-gradle-plugin'
             implementationClass = 'net.emustudio.edigen.plugin.EdigenPlugin'
             displayName = 'Edigen Gradle Plugin'
-            description = 'Generates instruction decoder/disassembler of an emuStudio CPU plugin using Edigen.'
+            description = 'Generates an instruction decoder of an emuStudio CPU plugin using Edigen.'
         }
     }
 }
@@ -47,7 +47,7 @@ mavenPublishing {
 
   pom {
     name = 'Edigen Gradle Plugin'
-    description = 'Generates instruction decoder/disassembler of an emuStudio CPU plugin using Edigen.'
+    description = 'Generates an instruction decoder of an emuStudio CPU plugin using Edigen.'
     url = 'https://github.com/emustudio/edigen-gradle-plugin'
     licenses {
       license {

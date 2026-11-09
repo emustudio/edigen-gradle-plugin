@@ -36,14 +36,6 @@ abstract class EdigenGenerationTask extends DefaultTask {
     abstract RegularFileProperty getDecoderTemplate()
 
     @Input
-    abstract Property<String> getDisassemblerName()
-
-    @Optional
-    @InputFile
-    @PathSensitive(PathSensitivity.RELATIVE)
-    abstract RegularFileProperty getDisassemblerTemplate()
-
-    @Input
     abstract Property<Boolean> getDebug()
 
     @OutputDirectory
@@ -55,18 +47,14 @@ abstract class EdigenGenerationTask extends DefaultTask {
     @TaskAction
     void generateEdigen() {
         String decoder = decoderName.get()
-        String disassembler = disassemblerName.get()
         sourcePath(decoder)
-        sourcePath(disassembler)
 
         File staging = stagedSources.get().asFile
         fileSystemOperations.delete { delete(staging) }
         def arguments = new ArgumentList()
-        arguments.addAll(specification.get().asFile.path, decoder, disassembler)
+        arguments.addAll(specification.get().asFile.path, decoder)
         arguments.addOutputDirectory('-do', new File(staging, 'decoder'), decoder)
-        arguments.addOutputDirectory('-ao', new File(staging, 'disassembler'), disassembler)
         arguments.addTemplate('-dt', decoderTemplate.orNull?.asFile)
-        arguments.addTemplate('-at', disassemblerTemplate.orNull?.asFile)
         boolean debugRequested = debug.get()
         arguments.addFlag('-d', debugRequested)
 
