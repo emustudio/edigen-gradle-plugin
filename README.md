@@ -3,7 +3,7 @@
 ![Maven Central Version](https://img.shields.io/maven-central/v/net.emustudio/edigen-gradle-plugin)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-This is a Gradle plugin which automatically generates an instruction decoder and disassembler of an emuStudio CPU
+This is a Gradle plugin which automatically generates an instruction decoder of an emuStudio CPU
 plugin from a specification using [Edigen](https://github.com/emustudio/edigen).
 
 It is a reimplementation of [edigen-maven-plugin](https://github.com/emustudio/edigen-maven-plugin) to be used with Gradle.
@@ -22,7 +22,6 @@ plugins {
 
 edigen {
   decoderName = 'decoder.package.ClassName'
-  disassemblerName = 'disassembler.package.ClassName'
 }
 ```
 
@@ -34,7 +33,6 @@ with the following parameters.
 ### Required parameters
 
 - `decoderName` - the generated instruction decoder package + class name
-- `disassemblerName` - the generated disassembler package + class name
 
 ### Optional parameters
 
@@ -42,20 +40,17 @@ with the following parameters.
 - `decoderTemplate` - the template to use for the decoder generation
 - `decoderOutputDir` - the generated decoder output directory; _default_: `build/generated-sources/edigen/`. This path
    will be appended with the decoder package name
-- `disassemblerTemplate` - the template to use for the disassembler generation
-- `disassemblerOutputDir` - the generated disassembler output directory; _default_: `build/generated-sources/edigen/`.
-   This path will be appended with the disassembler package name
 - `debug` - setting to true enables Edigen's debug mode
 
 The extension uses Gradle properties (`RegularFileProperty`, `DirectoryProperty`, and `Property`), so values
-can also be supplied through providers. Both output directories are registered as Java source directories
+can also be supplied through providers. The output directory is registered as a Java source directory
 with a producer dependency on `generateSources`. Unchanged specifications, templates, class names, and
 debug settings leave the task up-to-date. Task execution supports Gradle's configuration cache.
 
 ### Generated-source ownership
 
 Use dedicated generated-source directories, separate from handwritten sources. A private preparation task stages
-both generated files before `generateSources` can publish them. Invalid input fails that dependency before Gradle
+the generated file before `generateSources` can publish it. Invalid input fails that dependency before Gradle
 can clean published outputs, including when local task history is missing.
 Each output directory contains `.edigen-<owner>-owned-sources`, listing only sources written by this task.
 The owner identifies the root-project directory and task path, so tasks or subprojects sharing an output directory
@@ -65,6 +60,9 @@ without an ownership entry causes failure instead of being overwritten.
 
 When upgrading from a plugin version without ownership tracking, clean the old generated output once
 (`clean` suffices for the default directories). Keep the ownership file alongside outputs in custom directories.
+
+The decoder returns immutable instruction facts: address, length in memory cells, mnemonic, and encoding text.
+Separate disassembler configuration and generated disassembler classes are removed.
 
 ### Local generator verification
 

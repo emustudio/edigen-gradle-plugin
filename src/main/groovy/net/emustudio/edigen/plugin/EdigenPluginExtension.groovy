@@ -11,9 +11,6 @@ abstract class EdigenPluginExtension {
     abstract RegularFileProperty getSpecification()
     abstract Property<String> getDecoderName()
     abstract RegularFileProperty getDecoderTemplate()
-    abstract Property<String> getDisassemblerName()
-    abstract RegularFileProperty getDisassemblerTemplate()
-    abstract DirectoryProperty getDisassemblerOutputDir()
     abstract DirectoryProperty getDecoderOutputDir()
     abstract Property<Boolean> getDebug()
 }
